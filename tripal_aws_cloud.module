@@ -85,43 +85,46 @@ $webServerOwnerId = $describeSecurityGroups->toArray()['SecurityGroups'][0]['Own
 #-- rule 1: SSH(22)
 $result = $ec2->authorizeSecurityGroupIngress([
           'GroupId' => $webServerGroupId,
-          'FromPort' => '22',
-          'IpPermissions' => [
-            [
-              'IpProtocol' => 'tcp',
-              'IpRanges' => [
-                ['CidrIp' => '0.0.0.0/0'],
-              ],
-            ],
-          ],
+          'IpProtocol' => 'tcp',
+          'FromPort' => 22,
+          'ToPort' => 22,
+          'CidrIp' => '0.0.0.0/0'
         ]);
 
-#-- rule 2: HTTP(80)
+#-- rule 1: HTTP(80)
 $result = $ec2->authorizeSecurityGroupIngress([
           'GroupId' => $webServerGroupId,
-          'FromPort' => '80',
-          'IpPermissions' => [
-            [
-              'IpProtocol' => 'tcp',
-              'IpRanges' => [
-                ['CidrIp' => '0.0.0.0/0'],
-              ],
-            ],
-          ],
+          'IpProtocol' => 'tcp',
+          'FromPort' => 80,
+          'ToPort' => 80,
+          'CidrIp' => '0.0.0.0/0'
         ]);
 
-#-- rule 3: PostgreSQL(5432)
+#-- rule 1: HTTPS(443)
 $result = $ec2->authorizeSecurityGroupIngress([
           'GroupId' => $webServerGroupId,
-          'FromPort' => '5432',
-          'IpPermissions' => [
-            [
-              'IpProtocol' => 'tcp',
-              'IpRanges' => [
-                ['CidrIp' => '0.0.0.0/0'],
-              ],
-            ],
-          ],
+          'IpProtocol' => 'tcp',
+          'FromPort' => 443,
+          'ToPort' => 443,
+          'CidrIp' => '0.0.0.0/0'
+        ]);
+
+#-- rule 1: PostgreSQL(5432)
+$result = $ec2->authorizeSecurityGroupIngress([
+          'GroupId' => $webServerGroupId,
+          'IpProtocol' => 'tcp',
+          'FromPort' => 5432,
+          'ToPort' => 5432,
+          'CidrIp' => '0.0.0.0/0'
+        ]);
+
+#-- rule 1: MySQL/Aurora(3306)
+$result = $ec2->authorizeSecurityGroupIngress([
+          'GroupId' => $webServerGroupId,
+          'IpProtocol' => 'tcp',
+          'FromPort' => 3306,
+          'ToPort' => 3306,
+          'CidrIp' => '0.0.0.0/0'
         ]);
 
 dpm($result->toArray());
