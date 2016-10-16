@@ -1,0 +1,67 @@
+<?php
+
+require drupal_get_path('module', 'tripal_aws_cloud').'/vendor/autoload.php';
+
+
+
+/**
+ * Implements hook_menu()
+ */
+function tripal_aws_cloud_menu(){
+  $items['tripal_aws_cloud'] = array(
+    'title' => '',
+    'description' => t(''),
+    'page callback' => 'tripal_aws_cloud_page',
+    'access callback' => true,
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  return $items;
+}
+
+
+/**
+ * page callback: /tripal_aws_cloud page
+ */
+function tripal_aws_cloud_page(){
+  $output = 'test';
+
+  return $output;
+}
+
+
+use Aws\Credentials\CredentialProvider;
+use Aws\Ec2\Ec2Client;
+
+$provider = CredentialProvider::ini();
+
+$ec2 = new Aws\Ec2\Ec2Client([
+          'version' => 'latest',
+          'region' => 'us-east-1',
+          'credentials' => $provider
+          ]);
+
+try{
+  $instances = $ec2->describeInstances()->toArray();
+  //dpm($instances);
+} catch(Ec2Exception $e){
+  echo $e->getMessage();
+}
+
+try{
+  $instanceStatus = $ec2->describeInstanceStatus()->toArray();
+  //dpm($instanceStatus);
+} catch(AwsException $e){
+  echo $e->getMessage();
+}
+
+
+  $images = $ec2->describeImages([
+            'ImageIds' => ['ami-2051294a'],
+          ]);
+  dpm(get_object_vars($images));
+  dpm($images->toArray());
+  $instances = $ec2->describeInstances([
+            'InstanceIds' => ['i-02fdbf68ad61318b9'],
+          ]);
+  dpm($instances->toArray());

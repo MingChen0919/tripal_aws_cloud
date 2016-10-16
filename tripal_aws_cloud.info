@@ -1,0 +1,4 @@
+name = "Tripal AWS cloud"
+description = "Launch a tripal site on AWS cloud"
+package = Tripal AWS Cloud
+core = 7.x
