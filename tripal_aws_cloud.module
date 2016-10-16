@@ -30,6 +30,8 @@ function tripal_aws_cloud_page(){
 }
 
 
+
+## Create ec2 client
 use Aws\Credentials\CredentialProvider;
 use Aws\Ec2\Ec2Client;
 
@@ -41,27 +43,127 @@ $ec2 = new Aws\Ec2\Ec2Client([
           'credentials' => $provider
           ]);
 
-try{
-  $instances = $ec2->describeInstances()->toArray();
-  //dpm($instances);
-} catch(Ec2Exception $e){
-  echo $e->getMessage();
-}
 
-try{
-  $instanceStatus = $ec2->describeInstanceStatus()->toArray();
-  //dpm($instanceStatus);
-} catch(AwsException $e){
-  echo $e->getMessage();
-}
-
-
-  $images = $ec2->describeImages([
-            'ImageIds' => ['ami-2051294a'],
+## Step 1: creat VPC
+$vpc = $ec2->createVpc([
+          'CidrBlock' => '10.0.0.0/16',
           ]);
-  dpm(get_object_vars($images));
-  dpm($images->toArray());
-  $instances = $ec2->describeInstances([
-            'InstanceIds' => ['i-02fdbf68ad61318b9'],
+$VpcId = $vpc->toArray()['Vpc']['VpcId'];
+#dpm($vpc->toArray());
+#dpm($VpcId);
+
+## Step 2: create two pubic subnets and one private subnet within VPC
+$availZones = $ec2->describeAvailabilityZones([]);
+#dpm($availZones->toArray());
+$subnet_public_1 = $ec2->createSubnet([
+          'AvailabilityZone' => $availZones->toArray()['AvailabilityZones'][0]['ZoneName'],
+          'VpcId' => $VpcId,
+          'CidrBlock' => '10.0.0.0/24',
+        ]);
+#dpm($subnet_public_1->toArray());
+$SubnetId_public_1 = $subnet_public_1->toArray()['Subnet']['SubnetId'];
+
+
+## Step 3: create a security group for web server and a security group for database server
+$security_group_webServer = $ec2->createSecurityGroup([
+          'Description' => 'Security group for web server',
+          'GroupName' => 'webServer_security_group',
+          'VpcId' => $VpcId,
           ]);
-  dpm($instances->toArray());
+dpm($security_group_webServer->toArray());
+$webServerGroupId = $security_group_webServer->toArray()['GroupId'];
+$describeSecurityGroups = $ec2->describeSecurityGroups([
+            'GroupIds' => array($webServerGroupId),
+          ]);
+
+dpm($describeSecurityGroups->toArray());
+
+$webServerOwnerId = $describeSecurityGroups->toArray()['SecurityGroups'][0]['OwnerId'];
+
+
+#---- WebServer security group ingress---
+#-- rule 1: SSH(22)
+$result = $ec2->authorizeSecurityGroupIngress([
+          'GroupId' => $webServerGroupId,
+          'FromPort' => '22',
+          'IpPermissions' => [
+            [
+              'IpProtocol' => 'tcp',
+              'IpRanges' => [
+                ['CidrIp' => '0.0.0.0/0'],
+              ],
+            ],
+          ],
+        ]);
+
+#-- rule 2: HTTP(80)
+$result = $ec2->authorizeSecurityGroupIngress([
+          'GroupId' => $webServerGroupId,
+          'FromPort' => '80',
+          'IpPermissions' => [
+            [
+              'IpProtocol' => 'tcp',
+              'IpRanges' => [
+                ['CidrIp' => '0.0.0.0/0'],
+              ],
+            ],
+          ],
+        ]);
+
+#-- rule 3: PostgreSQL(5432)
+$result = $ec2->authorizeSecurityGroupIngress([
+          'GroupId' => $webServerGroupId,
+          'FromPort' => '5432',
+          'IpPermissions' => [
+            [
+              'IpProtocol' => 'tcp',
+              'IpRanges' => [
+                ['CidrIp' => '0.0.0.0/0'],
+              ],
+            ],
+          ],
+        ]);
+
+dpm($result->toArray());
+
+$security_group_databaseServer = $ec2->createSecurityGroup([
+          'Description' => 'Security group for database server',
+          'GroupName' => 'databaseServer_security_group',
+          'VpcId' => $VpcId,
+          ]);
+#dpm($security_group_databaseServer->toArray());
+$databaseServerGroupId = $security_group_databaseServer->toArray()['GroupId'];
+
+          #---- databaseServer security group ingress---
+
+
+
+
+/*
+## Delete security groups
+$deleteWebServerSecurityGroup = $ec2->deleteSecurityGroup([
+          'GroupId' => $webServerGroupId,
+        ]);
+
+$deleteDatabaseServerSecurityGroup = $ec2->deleteSecurityGroup([
+          'GroupId' => $databaseServerGroupId,
+        ]);
+
+## Delete Subnet
+$deleteSubnet_public_1 = $ec2->deleteSubnet([
+          'SubnetId' => $SubnetId_public_1 
+        ]);
+
+## Delete VPC
+$result = $ec2->deleteVpc([
+          'VpcId' => $VpcId,
+        ]);
+
+
+
+## Describe Security groups
+$describeSecurityGroups = $ec2->describeSecurityGroups([
+          'GroupIds' => ['sg-efe02495'],
+          ]);
+dpm($describeSecurityGroups->toArray());
+ */
