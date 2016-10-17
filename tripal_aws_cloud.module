@@ -44,6 +44,16 @@ $ec2 = new Aws\Ec2\Ec2Client([
           ]);
 
 
+$describeVpcs = $ec2->describeVpcs([]);
+$describeVpcsArr = $describeVpcs->toArray();
+$numVpcs = count($describeVpcsArr['Vpcs']);
+$VPCs = $describeVpcsArr['Vpcs'];
+dpm($describeVpcsArr);
+dpm($numVpcs);
+dpm($VPCs);
+
+
+/*
 ## Step 1: creat VPC
 $vpc = $ec2->createVpc([
           'CidrBlock' => '10.0.0.0/16',
@@ -91,7 +101,7 @@ $result = $ec2->authorizeSecurityGroupIngress([
           'CidrIp' => '0.0.0.0/0'
         ]);
 
-#-- rule 1: HTTP(80)
+#-- rule 2: HTTP(80)
 $result = $ec2->authorizeSecurityGroupIngress([
           'GroupId' => $webServerGroupId,
           'IpProtocol' => 'tcp',
@@ -100,7 +110,7 @@ $result = $ec2->authorizeSecurityGroupIngress([
           'CidrIp' => '0.0.0.0/0'
         ]);
 
-#-- rule 1: HTTPS(443)
+#-- rule 3: HTTPS(443)
 $result = $ec2->authorizeSecurityGroupIngress([
           'GroupId' => $webServerGroupId,
           'IpProtocol' => 'tcp',
@@ -109,7 +119,7 @@ $result = $ec2->authorizeSecurityGroupIngress([
           'CidrIp' => '0.0.0.0/0'
         ]);
 
-#-- rule 1: PostgreSQL(5432)
+#-- rule 4: PostgreSQL(5432)
 $result = $ec2->authorizeSecurityGroupIngress([
           'GroupId' => $webServerGroupId,
           'IpProtocol' => 'tcp',
@@ -118,7 +128,7 @@ $result = $ec2->authorizeSecurityGroupIngress([
           'CidrIp' => '0.0.0.0/0'
         ]);
 
-#-- rule 1: MySQL/Aurora(3306)
+#-- rule 5: MySQL/Aurora(3306)
 $result = $ec2->authorizeSecurityGroupIngress([
           'GroupId' => $webServerGroupId,
           'IpProtocol' => 'tcp',
@@ -139,7 +149,7 @@ $databaseServerGroupId = $security_group_databaseServer->toArray()['GroupId'];
 
           #---- databaseServer security group ingress---
 
-
+ */
 
 
 /*
