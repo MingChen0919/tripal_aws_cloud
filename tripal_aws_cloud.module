@@ -1,6 +1,9 @@
 <?php
 
 require drupal_get_path('module', 'tripal_aws_cloud').'/vendor/autoload.php';
+require drupal_get_path('module', 'tripal_aws_cloud').'/includes/application_server.inc';
+require drupal_get_path('module', 'tripal_aws_cloud').'/includes/database_server.inc';
+
 
 
 
@@ -48,10 +51,6 @@ $describeVpcs = $ec2->describeVpcs([]);
 $describeVpcsArr = $describeVpcs->toArray();
 $numVpcs = count($describeVpcsArr['Vpcs']);
 $VPCs = $describeVpcsArr['Vpcs'];
-dpm($describeVpcsArr);
-dpm($numVpcs);
-dpm($VPCs);
-
 
 /*
 ## Step 1: creat VPC
