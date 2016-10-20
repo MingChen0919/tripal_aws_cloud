@@ -16,8 +16,6 @@ $ec2 = new Aws\Ec2\Ec2Client([
 $describeVpcs = $ec2->describeVpcs([]);
 $describeVpcsArr = $describeVpcs->toArray();
 
-dpm($describeVpcsArr);
-
 if(count($describeVpcsArr)> 4){
   break;
 } else {
@@ -26,7 +24,6 @@ if(count($describeVpcsArr)> 4){
             'CidrBlock' => '10.0.0.0/16',
             ]);
   $vpcArr = $vpc->toArray();
-  dpm($vpcArr);
   $VpcId = $vpcArr['Vpc']['VpcId'];
 
   dpm($VpcId);
@@ -34,9 +31,8 @@ if(count($describeVpcsArr)> 4){
   ##==== create internetgateway =========
   $internetGateway = $ec2->createInternetGateway([]);
   $internetGatewayArr = $internetGateway->toArray();
-  dpm($internetGatewayArr);
   $gatewayId = $internetGatewayArr['InternetGateway']['InternetGatewayId'];
-  dpm("getway ID: $gatewayId");
+
   # attach internet gateway to the VPC
   $ec2->attachInternetGateway([
             'InternetGatewayId' => $gatewayId,
@@ -55,33 +51,44 @@ if(count($describeVpcsArr)> 4){
             'GatewayId' => $gatewayId,
             'RouteTableId' => $routeTableId,  
           ]);
-  dpm("route table id: $routeTableId");
 
   ##==== create two public subnets ======
   # get available zones
   $availZones = $ec2->describeAvailabilityZones([]);
   $availZonesArr =  $availZones->toArray();
+  $availZone1 = $availZonesArr['AvailabilityZones'][0]['ZoneName'];
+  $availZone2 = $availZonesArr['AvailabilityZones'][1]['ZoneName'];
 
-  dpm($availZonesArr);
   # public subnet 1
   $public_subnet_1 = $ec2->createSubnet([
-            'AvailabilityZone' => $availZonesArr['AvailabilityZones'][0]['ZoneName'],
+            'AvailabilityZone' => $availZone1,
             'VpcId' => $VpcId,
             'CidrBlock' => '10.0.0.0/24',
             ]);
   $public_subnet_1_Arr = $public_subnet_1->toArray();
   $public_subnet_1_ID = $public_subnet_1_Arr['Subnet']['SubnetId'];
-  $ec2->modifySubnetAttribute([
-            'MapPublicIpOnLaunch' => [
-              'Value' => true,
-            ],
+
+  # associate route table with public subnet 1
+  $associateRouteTable = $ec2->associateRouteTable([
+            'RouteTableId' => $routeTableId,
             'SubnetId' => $public_subnet_1_ID,
           ]);
+ 
   # public subnet 2
   $public_subnet_2 = $ec2->createSubnet([
-            'AvailabilityZone' => $availZonesArr['AvailabilityZones'][0]['ZoneName'],
+            'AvailabilityZone' => $availZone2,
             'VpcId' => $VpcId,
             'CidrBlock' => '10.0.1.0/24',
             ]);
+  $public_subnet_2_Arr = $public_subnet_2->toArray();
+  $public_subnet_2_ID = $public_subnet_2_Arr['Subnet']['SubnetId'];
+
+
+  # associate route table with public subnet 1
+  $associateRouteTable = $ec2->associateRouteTable([
+            'RouteTableId' => $routeTableId,
+            'SubnetId' => $public_subnet_2_ID,
+          ]);
+
 }
 
